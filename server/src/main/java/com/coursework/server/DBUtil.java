@@ -3,7 +3,7 @@ package com.coursework.server;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class Main {
+public class DBUtil {
     public static void main(String[] args) {
         try (Connection connection = DatabaseConnection.getConnection()) {
             if (connection != null && !connection.isClosed()) {
