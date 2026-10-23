@@ -1,44 +1,55 @@
 DROP DATABASE IF EXISTS coursework_db;
 CREATE DATABASE coursework_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE coursework_db;
-CREATE TABLE suppliers (
-                           id INT AUTO_INCREMENT PRIMARY KEY,
-                           name VARCHAR(150) NOT NULL,
-                           contact_info VARCHAR(255)
-);
-CREATE TABLE products (
-                          id INT AUTO_INCREMENT PRIMARY KEY,
+-- Постачальники
+CREATE TABLE supplier (
+                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
                           name VARCHAR(150) NOT NULL,
-                          sku VARCHAR(50) UNIQUE NOT NULL,
-                          price DECIMAL(10, 2) NOT NULL,
-                          supplier_id INT,
-                          FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
+                          contact_info VARCHAR(255) NOT NULL,
+                          delivery_days INT NOT NULL
 );
+-- Товари
+CREATE TABLE product (
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         supplier_id BIGINT NOT NULL,
+                         name VARCHAR(150) NOT NULL,
+                         unit_price DOUBLE NOT NULL,
+                         FOREIGN KEY (supplier_id) REFERENCES supplier(id) ON DELETE CASCADE
+);
+--  Запаси на складі
 CREATE TABLE stock (
-                       id INT AUTO_INCREMENT PRIMARY KEY,
-                       product_id INT NOT NULL,
-                       quantity INT NOT NULL,
-                       min_threshold INT NOT NULL,
-                       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                       product_id BIGINT NOT NULL,
+                       current_quantity DOUBLE NOT NULL,
+                       min_threshold DOUBLE NOT NULL,
+                       f2 DOUBLE NOT NULL,
+                       f3 DOUBLE NOT NULL,
+                       FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE
 );
-CREATE TABLE replenishment_orders (
-                                      id INT AUTO_INCREMENT PRIMARY KEY,
-                                      product_id INT NOT NULL,
-                                      quantity INT NOT NULL,
-                                      state VARCHAR(50) NOT NULL DEFAULT 'CREATED',
-                                      order_date DATE NOT NULL,
-                                      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+-- Замовлення на поповнення
+CREATE TABLE replenishment_order (
+                                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                     stock_id BIGINT NOT NULL,
+                                     state VARCHAR(50) NOT NULL,
+                                     f1 DOUBLE NOT NULL,
+                                     f2 DOUBLE NOT NULL,
+                                     f3 DOUBLE NOT NULL,
+                                     risk_index DOUBLE NOT NULL,
+                                     order_date VARCHAR(50) NOT NULL,
+                                     FOREIGN KEY (stock_id) REFERENCES stock(id) ON DELETE CASCADE
 );
 -- Демонстраційні дані
-INSERT INTO suppliers (name, contact_info) VALUES
-                                               ('ТОВ "ПостачТрейд"', 'contact@postachtrade.ua'),
-                                               ('ПП "ТехноСвіт"', 'info@technosvit.ua');
-INSERT INTO products (name, sku, price, supplier_id) VALUES
-                                                         ('Лазерний принтер', 'PRN-001', 4500.00, 1),
-                                                         ('Офісний папір А4', 'PAP-002', 180.50, 2);
+INSERT INTO supplier (name, contact_info, delivery_days) VALUES
+                                                             ('ТОВ "ПостачТрейд"', 'contact@postachtrade.ua', 5),
+                                                             ('ПП "ТехноСвіт"', 'info@technosvit.ua', 3);
 
-INSERT INTO stock (product_id, quantity, min_threshold) VALUES
-                                                            (1, 12, 5),
-                                                            (2, 45, 20);
-INSERT INTO replenishment_orders (product_id, quantity, state, order_date) VALUES
-    (1, 10, 'CREATED', '2026-06-01');
+INSERT INTO product (supplier_id, name, unit_price) VALUES
+                                                        (1, 'Лазерний принтер', 4500.00),
+                                                        (2, 'Офісний папір А4', 180.50);
+
+INSERT INTO stock (product_id, current_quantity, min_threshold, f2, f3) VALUES
+                                                                            (1, 12.0, 5.0, 75.5, 80.0),
+                                                                            (2, 45.0, 20.0, 60.0, 50.0);
+
+INSERT INTO replenishment_order (stock_id, state, f1, f2, f3, risk_index, order_date) VALUES
+    (1, 'CREATED', 70.0, 75.5, 80.0, 74.2, '2026-06-01');
