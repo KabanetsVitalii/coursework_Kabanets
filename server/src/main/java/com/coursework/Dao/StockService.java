@@ -21,6 +21,10 @@ public class StockService {
         if (stock.getMinThreshold() < 0) {
             throw new IllegalArgumentException("Мінімальний поріг не може бути від'ємним");
         }
+        if (stock.getF2() < 0 || stock.getF2() > 100 ||
+                stock.getF3() < 0 || stock.getF3() > 100) {
+            throw new IllegalArgumentException("Фактори F2 і F3 мають бути в діапазоні 0..100");
+        }
     }
     private void requireProduct(long productId) throws SQLException {
         Product product = productDao.findById(productId);

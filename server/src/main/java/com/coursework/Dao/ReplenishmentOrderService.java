@@ -1,10 +1,8 @@
 package com.coursework.Dao;
 
+import com.coursework.model.OrderState;
 import com.coursework.model.ReplenishmentOrder;
 import com.coursework.model.Stock;
-import com.coursework.model.Product;
-import com.coursework.model.Supplier;
-import com.coursework.model.OrderState;
 import com.coursework.server.RiskCalculator;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -13,100 +11,66 @@ import java.util.logging.Logger;
 
 public class ReplenishmentOrderService {
     private static final Logger LOG = Logger.getLogger(ReplenishmentOrderService.class.getName());
-    private final ReplenishmentOrderDao dao = new ReplenishmentOrderDao();
+    private final ReplenishmentOrderDao orderDao = new ReplenishmentOrderDao();
     private final StockDao stockDao = new StockDao();
-    private final ProductDao productDao = new ProductDao();
-    private final SupplierDao supplierDao = new SupplierDao();
 
-    private void validate(ReplenishmentOrder order) {
-        if (order == null) {
-            throw new IllegalArgumentException("Замовлення не може бути null");
-        }
-        if (order.getStockId() <= 0) {
-            throw new IllegalArgumentException("Некоректний ID складу/запасу");
-        }
-        if (order.getState() == null) {
-            throw new IllegalArgumentException("Стан замовлення є обов'язковим");
-        }
-        if (order.getOrderDate() == null || order.getOrderDate().isBlank()) {
-            throw new IllegalArgumentException("Дата замовлення є обов'язковою");
-        }
-    }
-    private Stock requireStock(long stockId) throws SQLException {
+    public ReplenishmentOrder fromStock(long stockId) throws SQLException {
         Stock stock = stockDao.findById(stockId);
         if (stock == null) {
-            throw new IllegalArgumentException("Запас/склад з ID " + stockId + " не знайдено");
+            throw new IllegalArgumentException("Запас із ID " + stockId + " не знайдено в базі даних.");
         }
-        return stock;
-    }
-    // Розрахунок та створення на основі RiskCalculator
-    public ReplenishmentOrder fromStock(long stockId) throws SQLException {
-        Stock stock = requireStock(stockId);
-        Product product = productDao.findById(stock.getProductId());
-        if (product == null) {
-            throw new IllegalArgumentException("Товар для заданого запасу не знайдено");
-        }
-        Supplier supplier = supplierDao.findById(product.getSupplierId());
         double f1 = RiskCalculator.factor1(stock.getCurrentQuantity(), stock.getMinThreshold());
-        double deliveryDays = (supplier != null) ? supplier.getDeliveryDays() : 1.0;
-        double f2 = Math.min(100.0, (deliveryDays / 30.0) * 100.0);
-        double unitPrice = product.getUnitPrice();
-        double f3 = Math.min(100.0, (unitPrice / 10000.0) * 100.0);
+        double f2 = stock.getF2();
+        double f3 = stock.getF3();
         double riskIndex = RiskCalculator.calculate(f1, f2, f3);
-
         ReplenishmentOrder order = new ReplenishmentOrder();
         order.setStockId(stockId);
-        order.setOrderDate(LocalDate.now().toString());
-        order.setState(OrderState.CREATED); // Початковий стан замовлення
+        order.setState(OrderState.CREATED);
         order.setF1(f1);
         order.setF2(f2);
         order.setF3(f3);
         order.setRiskIndex(riskIndex);
+        order.setOrderDate(LocalDate.now().toString());
+
         return order;
     }
-    public static boolean isAllowedTransition(OrderState from, OrderState to) {
-        return (from == OrderState.CREATED && to == OrderState.APPROVED)
-                || (from == OrderState.APPROVED && to == OrderState.ORDERED)
-                || (from == OrderState.ORDERED && to == OrderState.RECEIVED);
-    }
-    public void changeState(long id, OrderState next) throws SQLException {
-        ReplenishmentOrder current = dao.findById(id);
-        if (current == null) {
-            throw new IllegalArgumentException("Замовлення на поповнення не знайдено");
-        }
-        if (!isAllowedTransition(current.getState(), next)) {
-            LOG.warning("Недопустимий перехід стану: " + current.getState() + " -> " + next);
-            throw new IllegalArgumentException("Недопустимий перехід стану");
-        }
-        dao.updateState(id, next);
-        LOG.info("Змінено стан замовлення: " + current.getState() + " -> " + next);
-    }
-    public List<ReplenishmentOrder> getAll() throws SQLException {
-        return dao.findAll();
-    }
-    public ReplenishmentOrder getById(long id) throws SQLException {
-        return dao.findById(id);
-    }
+    /**
+     * Додавання замовлення до бази даних
+     */
     public void add(long stockId) throws SQLException {
         ReplenishmentOrder order = fromStock(stockId);
-        validate(order);
-        dao.save(order);
-        LOG.info("Створено замовлення на поповнення");
+        orderDao.save(order);
+        LOG.info("Створено замовлення на поповнення для stock_id=" + stockId + " з індексом ризику: " + order.getRiskIndex());
     }
-    public void update(long id, long newStockId) throws SQLException {
-        ReplenishmentOrder existing = dao.findById(id);
-        if (existing == null) {
-            throw new IllegalArgumentException("Замовлення з ID " + id + " не знайдено");
+    /**
+     * Отримання всіх замовлень
+     */
+    public List<ReplenishmentOrder> getAll() throws SQLException {
+        return orderDao.findAll();
+    }
+    /**
+     * Керування життєвим циклом та зміна стану з перевіркою коректності переходів
+     */
+    public void changeState(long orderId, OrderState newState) throws SQLException {
+        ReplenishmentOrder order = orderDao.findById(orderId);
+        if (order == null) {
+            throw new IllegalArgumentException("Замовлення з ID " + orderId + " не знайдено.");
         }
-        ReplenishmentOrder updated = fromStock(newStockId);
-        updated.setId(id);
-        updated.setState(existing.getState());
-        validate(updated);
-        dao.update(updated);
-        LOG.info("Оновлено замовлення на поповнення");
+        OrderState currentState = order.getState();
+
+        if (!isValidTransition(currentState, newState)) {
+            throw new IllegalArgumentException("Заборонений перехід стану: " + currentState + " -> " + newState);
+        }
+        order.setState(newState);
+        orderDao.update(order);
+        LOG.info("Стан замовлення ID " + orderId + " успішно змінено з " + currentState + " на " + newState);
     }
-    public void delete(long id) throws SQLException {
-        dao.delete(id);
-        LOG.info("Видалено замовлення на поповнення");
+    /**
+     * Правила переходів чотиристанного життєвого циклу
+     */
+    private boolean isValidTransition(OrderState current, OrderState next) {
+        return (current == OrderState.CREATED && next == OrderState.APPROVED) ||
+                (current == OrderState.APPROVED && next == OrderState.ORDERED) ||
+                (current == OrderState.ORDERED && next == OrderState.RECEIVED);
     }
 }

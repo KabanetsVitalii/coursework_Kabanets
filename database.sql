@@ -46,10 +46,12 @@ INSERT INTO supplier (name, contact_info, delivery_days) VALUES
 INSERT INTO product (supplier_id, name, unit_price) VALUES
                                                         (1, 'Лазерний принтер', 4500.00),
                                                         (2, 'Офісний папір А4', 180.50);
-
 INSERT INTO stock (product_id, current_quantity, min_threshold, f2, f3) VALUES
-                                                                            (1, 12.0, 5.0, 75.5, 80.0),
-                                                                            (2, 45.0, 20.0, 60.0, 50.0);
+                                                                            (1, 15.0, 60.0, 40.0, 80.0),
+                                                                            (1, 45.0, 50.0, 50.0, 40.0),
+                                                                            (1, 10.0, 40.0, 45.0, 65.0),
+                                                                            (1, 70.0, 50.0, 45.0, 35.0);
 
+-- Початковий приклад створеного замовлення для Запасу №1 (I = 64.0)
 INSERT INTO replenishment_order (stock_id, state, f1, f2, f3, risk_index, order_date) VALUES
-    (1, 'CREATED', 70.0, 75.5, 80.0, 74.2, '2026-06-01');
+    (1, 'CREATED', 75.0, 40.0, 80.0, 64.00, '2026-10-24');
