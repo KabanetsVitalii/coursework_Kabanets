@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS coursework_db;
-CREATE DATABASE coursework_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE coursework_db;
+DROP DATABASE IF EXISTS warehouse_db;
+CREATE DATABASE warehouse_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE warehouse_db;
 -- Постачальники
 CREATE TABLE supplier (
                           id BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -1,4 +1,4 @@
-package com.coursework.model;
+package ua.edu.nupp.kpp.server;
 
 public class Product {
     private Long id;
