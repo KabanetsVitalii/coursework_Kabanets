@@ -23,6 +23,7 @@ public class ReplenishmentOrderService {
         dao.add(fromStock(null, stockId, OrderState.CREATED, LocalDate.now().toString()));
         LOG.info("Створено замовлення поповнення");
     }
+
     /** Змінює запас замовлення; фактори й riskIndex перераховуються, стан не змінюється. */
     public void update(long id, long stockId) throws SQLException {
         ReplenishmentOrder old = dao.getById(id);
@@ -32,6 +33,7 @@ public class ReplenishmentOrderService {
         dao.update(fromStock(id, stockId, old.getState(), old.getOrderDate()));
         LOG.info("Оновлено замовлення поповнення");
     }
+
     /** Зміна стану життєвого циклу з перевіркою допустимості переходу. */
     public void changeState(long id, OrderState next) throws SQLException {
         ReplenishmentOrder current = dao.getById(id);
@@ -45,6 +47,7 @@ public class ReplenishmentOrderService {
         dao.updateState(id, next);
         LOG.info("Змінено стан: " + current.getState() + " -> " + next);
     }
+
     public void delete(long id) throws SQLException {
         if (dao.getById(id) == null) {
             throw new IllegalArgumentException("Замовлення поповнення не знайдено");
@@ -52,11 +55,14 @@ public class ReplenishmentOrderService {
         dao.delete(id);
         LOG.info("Видалено замовлення поповнення");
     }
+
+    /** Єдине місце правил переходів: CREATED -> APPROVED -> ORDERED -> RECEIVED. */
     public static boolean isAllowedTransition(OrderState from, OrderState to) {
         return (from == OrderState.CREATED && to == OrderState.APPROVED)
                 || (from == OrderState.APPROVED && to == OrderState.ORDERED)
                 || (from == OrderState.ORDERED && to == OrderState.RECEIVED);
     }
+
     private ReplenishmentOrder fromStock(Long id, long stockId, OrderState state, String orderDate)
             throws SQLException {
         Stock stock = stockDAO.getById(stockId);

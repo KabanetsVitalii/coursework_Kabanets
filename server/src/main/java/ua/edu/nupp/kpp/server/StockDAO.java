@@ -3,6 +3,7 @@ package ua.edu.nupp.kpp.server;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
 public class StockDAO {
     public void add(Stock s) throws SQLException {
         String sql = "INSERT INTO stock(product_id,current_quantity,min_threshold,f2,f3) VALUES(?,?,?,?,?)";
@@ -17,6 +18,7 @@ public class StockDAO {
             }
         }
     }
+
     public List<Stock> getAll() throws SQLException {
         List<Stock> list = new ArrayList<>();
         String sql = "SELECT id,product_id,current_quantity,min_threshold,f2,f3 FROM stock ORDER BY id";

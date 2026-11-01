@@ -18,6 +18,7 @@ public class ReplenishmentOrderDAO {
             }
         }
     }
+
     public List<ReplenishmentOrder> getAll() throws SQLException {
         List<ReplenishmentOrder> list = new ArrayList<>();
         String sql = "SELECT id,stock_id,state,f1,f2,f3,risk_index,order_date FROM replenishment_order ORDER BY id";
@@ -30,6 +31,7 @@ public class ReplenishmentOrderDAO {
         }
         return list;
     }
+
     public ReplenishmentOrder getById(long id) throws SQLException {
         String sql = "SELECT id,stock_id,state,f1,f2,f3,risk_index,order_date FROM replenishment_order WHERE id=?";
         try (Connection c = DBUtil.getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
@@ -39,6 +41,7 @@ public class ReplenishmentOrderDAO {
             }
         }
     }
+
     public void update(ReplenishmentOrder o) throws SQLException {
         String sql = "UPDATE replenishment_order SET stock_id=?,state=?,f1=?,f2=?,f3=?,risk_index=?,order_date=? WHERE id=?";
         try (Connection c = DBUtil.getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
@@ -47,6 +50,8 @@ public class ReplenishmentOrderDAO {
             p.executeUpdate();
         }
     }
+
+    /** Змінює лише стан; допустимість переходу перевіряє Service. */
     public void updateState(long id, OrderState state) throws SQLException {
         String sql = "UPDATE replenishment_order SET state=? WHERE id=?";
         try (Connection c = DBUtil.getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
