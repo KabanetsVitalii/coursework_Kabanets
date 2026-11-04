@@ -8,15 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * Початкова реалізація імпорту залишків товарів із CSV (етап 3): читання файла, розбір рядків
- * і передавання коректних записів серверу через HttpReplenishmentClient.
- * Запис у MySQL напряму не виконується: використовується той самий маршрут, що й ручне введення.
- * Фоновий запуск через JavaFX Task і ProgressBar буде додано на етапі 4.
- *
- * Формат (роздільник «;», перший рядок — заголовок):
- *   product_id;current_quantity;min_threshold;f2;f3
- */
 public final class StockCsvImporter {
     private static final Logger LOG = Logger.getLogger(StockCsvImporter.class.getName());
     public static final String HEADER = "product_id;current_quantity;min_threshold;f2;f3";

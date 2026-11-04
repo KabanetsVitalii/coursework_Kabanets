@@ -10,22 +10,15 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-/**
- * Спільна основа всіх Servlet: формування JSON-відповіді, обробка помилок і розбір параметрів.
- * Предметної логіки та SQL тут немає: вона залишається в Service та DAO.
- */
 public abstract class JsonServlet extends HttpServlet {
     private static final Logger LOG = Logger.getLogger(JsonServlet.class.getName());
     private final ObjectMapper mapper = new ObjectMapper();
-
     /** Успішна відповідь: Java-об'єкт або список перетворюється у JSON (Java -> JSON). */
     protected void writeJson(HttpServletResponse resp, Object data) throws IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         mapper.writeValue(resp.getWriter(), data);
     }
-
     /**
      * Помилка у вигляді JSON {"error": "текст"}.
      * 400 — некоректний запит або порушення предметного правила (IllegalArgumentException),
@@ -63,7 +56,6 @@ public abstract class JsonServlet extends HttpServlet {
             throw new IllegalArgumentException("Параметр " + name + " має бути цілим числом");
         }
     }
-
     protected static int intParam(HttpServletRequest req, String name) {
         long v = longParam(req, name);
         if (v < Integer.MIN_VALUE || v > Integer.MAX_VALUE) {
@@ -71,7 +63,6 @@ public abstract class JsonServlet extends HttpServlet {
         }
         return (int) v;
     }
-
     /** Обов'язковий дробовий параметр; NaN та нескінченність відхиляються. */
     protected static double doubleParam(HttpServletRequest req, String name) {
         String v = req.getParameter(name);
