@@ -13,12 +13,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+
 public class HttpReplenishmentClient {
     private static final String BASE = "http://localhost:8080/warehouse-server";
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    // Постачальники: /suppliers
+
+    //  Постачальники:
     public List<Supplier> getSuppliers() {
         return Arrays.asList(read(get("/suppliers"), Supplier[].class));
     }
@@ -30,11 +32,12 @@ public class HttpReplenishmentClient {
     public void updateSupplier(Supplier s) {
         post("/suppliers", "action=update&id=" + s.getId() + "&" + supplierForm(s));
     }
+
     public void deleteSupplier(long id) {
         post("/suppliers", "action=delete&id=" + id);
     }
 
-    //Товари: /products
+    //Товари:
     public List<Product> getProducts() {
         return Arrays.asList(read(get("/products"), Product[].class));
     }
@@ -51,7 +54,7 @@ public class HttpReplenishmentClient {
         post("/products", "action=delete&id=" + id);
     }
 
-    //  Запаси: /stocks
+    // Запаси:
     public List<Stock> getStocks() {
         return Arrays.asList(read(get("/stocks"), Stock[].class));
     }
@@ -68,10 +71,11 @@ public class HttpReplenishmentClient {
         post("/stocks", "action=delete&id=" + id);
     }
 
-    //  Замовлення поповнення: /orders
+    // Замовлення поповнення:
     public List<ReplenishmentOrder> getOrders() {
         return Arrays.asList(read(get("/orders"), ReplenishmentOrder[].class));
     }
+
     public void addOrder(long stockId) {
         post("/orders", "action=add&stockId=" + stockId);
     }
@@ -86,7 +90,6 @@ public class HttpReplenishmentClient {
     public void deleteOrder(long id) {
         post("/orders", "action=delete&id=" + id);
     }
-
     // формування параметрів
     private String supplierForm(Supplier s) {
         return "name=" + enc(s.getName()) + "&contactInfo=" + enc(s.getContactInfo())
@@ -133,6 +136,7 @@ public class HttpReplenishmentClient {
         }
         return r.body();
     }
+
     private String errorText(int status, String body, String uri) {
         try {
             String message = mapper.readTree(body).path("error").asText("");
@@ -140,7 +144,6 @@ public class HttpReplenishmentClient {
                 return message;
             }
         } catch (IOException | RuntimeException ignored) {
-            // тіло не є JSON: показуємо код відповіді
         }
         if (status == 404) {
             return "Помилка HTTP 404: за адресою " + uri + " застосунок не знайдено. "
@@ -148,6 +151,7 @@ public class HttpReplenishmentClient {
         }
         return "Помилка HTTP " + status;
     }
+
     private <T> T read(String json, Class<T> type) {
         try {
             return mapper.readValue(json, type);
@@ -155,6 +159,7 @@ public class HttpReplenishmentClient {
             throw new RuntimeException("Помилка JSON", e);
         }
     }
+
     private String enc(String s) {
         return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8);
     }
