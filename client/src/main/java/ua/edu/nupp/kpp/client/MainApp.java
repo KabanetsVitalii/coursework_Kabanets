@@ -35,7 +35,8 @@ public class MainApp extends Application {
         stage.show();
         refreshAll();
     }
-    // Постачальник
+
+    // Постачальники
     private Pane supplierPane() {
         suppliers.getColumns().setAll(col("ID", "id"), col("Назва", "name"),
                 col("Контакти", "contactInfo"), col("Термін доставки, днів", "deliveryDays"));
@@ -70,7 +71,7 @@ public class MainApp extends Application {
                 new HBox(8, add, update, delete, refresh)));
     }
 
-    //Товари
+    // Товари
     private Pane productPane() {
         products.getColumns().setAll(col("ID", "id"), col("ID постачальника", "supplierId"),
                 col("Назва товару", "name"), col("Ціна за одиницю", "unitPrice"));
@@ -105,6 +106,7 @@ public class MainApp extends Application {
                 new Label("Назва товару"), name, new Label("Ціна за одиницю"), price,
                 new HBox(8, add, update, delete, refresh)));
     }
+
     // Запаси
     private Pane stockPane() {
         stocks.getColumns().setAll(col("ID", "id"), col("ID товару", "productId"),
@@ -158,7 +160,8 @@ public class MainApp extends Application {
                 new Label("F3 — ризик затримки постачання (0–100)"), f3,
                 new HBox(8, add, update, delete, refresh), importCsv, status));
     }
-    // Замовлення поповнення
+
+    //Замовлення поповнення
     private Pane orderPane() {
         orders.getColumns().setAll(col("ID", "id"), col("ID запасу", "stockId"), col("Стан", "state"),
                 col("F1 (дефіцит запасу)", "f1"), col("F2", "f2"), col("F3", "f3"),
@@ -168,7 +171,7 @@ public class MainApp extends Application {
         Button add = new Button("Створити"), update = new Button("Перерахувати"),
                 change = new Button("Змінити стан"), delete = new Button("Видалити"),
                 refresh = new Button("Оновити");
-        // Клієнт передає лише ID запасу: F1, F2, F3 та I розраховує сервер (ReplenishmentOrderService)
+
         add.setOnAction(e -> safe(() -> {
             api.addOrder(longOf(stockId, "ID запасу"));
             refreshOrders();
@@ -177,7 +180,7 @@ public class MainApp extends Application {
             api.updateOrder(selected(orders).getId(), longOf(stockId, "ID запасу"));
             refreshOrders();
         }));
-        // Допустимість переходу перевіряє сервер; клієнт лише показує результат або помилку
+
         change.setOnAction(e -> safe(() -> {
             if (state.getValue() == null) {
                 throw new IllegalArgumentException("Виберіть новий стан");
@@ -199,13 +202,14 @@ public class MainApp extends Application {
                 new Label("Новий стан замовлення"), state,
                 new HBox(8, add, update, change, delete, refresh)));
     }
-    // допоміжні методи
+
     private Stock readStock(Long id, TextField productId, TextField quantity, TextField threshold,
                             TextField f2, TextField f3) {
         return new Stock(id, longOf(productId, "ID товару"), doubleOf(quantity, "Поточний запас"),
                 doubleOf(threshold, "Мінімальний поріг"), doubleOf(f2, "F2"), doubleOf(f3, "F3"));
     }
-    /** Оновлює всі таблиці; якщо сервер недоступний */
+
+
     private void refreshAll() {
         safe(() -> {
             suppliers.setItems(FXCollections.observableArrayList(api.getSuppliers()));
@@ -214,18 +218,23 @@ public class MainApp extends Application {
             orders.setItems(FXCollections.observableArrayList(api.getOrders()));
         });
     }
+
     private void refreshSuppliers() {
         safe(() -> suppliers.setItems(FXCollections.observableArrayList(api.getSuppliers())));
     }
+
     private void refreshProducts() {
         safe(() -> products.setItems(FXCollections.observableArrayList(api.getProducts())));
     }
+
     private void refreshStocks() {
         safe(() -> stocks.setItems(FXCollections.observableArrayList(api.getStocks())));
     }
+
     private void refreshOrders() {
         safe(() -> orders.setItems(FXCollections.observableArrayList(api.getOrders())));
     }
+
     private <T> T selected(TableView<T> table) {
         T v = table.getSelectionModel().getSelectedItem();
         if (v == null) {
@@ -233,6 +242,7 @@ public class MainApp extends Application {
         }
         return v;
     }
+
     private long longOf(TextField field, String name) {
         try {
             return Long.parseLong(field.getText().trim());
@@ -240,6 +250,7 @@ public class MainApp extends Application {
             throw new IllegalArgumentException("Поле «" + name + "» має бути цілим числом");
         }
     }
+
     private int intOf(TextField field, String name) {
         try {
             return Integer.parseInt(field.getText().trim());
@@ -247,6 +258,7 @@ public class MainApp extends Application {
             throw new IllegalArgumentException("Поле «" + name + "» має бути цілим числом");
         }
     }
+
     private double doubleOf(TextField field, String name) {
         try {
             return Double.parseDouble(field.getText().trim().replace(',', '.'));
@@ -254,7 +266,7 @@ public class MainApp extends Application {
             throw new IllegalArgumentException("Поле «" + name + "» має бути числом");
         }
     }
-    /** Усі дії користувача виконуються тут: помилка показується діалогом, а не в консолі. */
+
     private void safe(Runnable action) {
         try {
             action.run();
@@ -263,11 +275,13 @@ public class MainApp extends Application {
             showError(e);
         }
     }
+
     private void showError(Throwable e) {
         Alert d = new Alert(Alert.AlertType.ERROR, e == null ? "Помилка" : e.getMessage(), ButtonType.OK);
         d.setHeaderText(null);
         d.showAndWait();
     }
+
     private Pane layout(TableView<?> table, Pane form) {
         SplitPane p = new SplitPane(table, form);
         p.setDividerPositions(0.68);
@@ -275,11 +289,13 @@ public class MainApp extends Application {
         root.setPadding(new Insets(10));
         return root;
     }
+
     private <S, T> TableColumn<S, T> col(String title, String property) {
         TableColumn<S, T> c = new TableColumn<>(title);
         c.setCellValueFactory(new PropertyValueFactory<>(property));
         return c;
     }
+
     public static void main(String[] args) {
         launch(args);
     }

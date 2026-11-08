@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+
 public final class StockCsvImporter {
     private static final Logger LOG = Logger.getLogger(StockCsvImporter.class.getName());
     public static final String HEADER = "product_id;current_quantity;min_threshold;f2;f3";
@@ -15,7 +16,7 @@ public final class StockCsvImporter {
 
     private StockCsvImporter() {
     }
-    /** Підсумок імпорту: скільки записів прийнято і які рядки пропущено (з причиною). */
+
     public static final class Result {
         private int imported;
         private final List<String> skipped = new ArrayList<>();
@@ -51,7 +52,7 @@ public final class StockCsvImporter {
         }
         return result;
     }
-    /** Розбір одного рядка. Діапазони значень перевіряє сервер (StockService), а не клієнт. */
+
     public static Stock parseLine(String line) {
         String[] p = line.split(";", -1);
         if (p.length != COLUMNS) {

@@ -18,13 +18,12 @@ public class ReplenishmentOrderService {
         return dao.getById(id);
     }
 
-    /** Створює замовлення для запасу: F1, F2, F3 та riskIndex розраховує сервер, стан — CREATED. */
+
     public void add(long stockId) throws SQLException {
         dao.add(fromStock(null, stockId, OrderState.CREATED, LocalDate.now().toString()));
         LOG.info("Створено замовлення поповнення");
     }
 
-    /** Змінює запас замовлення; фактори й riskIndex перераховуються, стан не змінюється. */
     public void update(long id, long stockId) throws SQLException {
         ReplenishmentOrder old = dao.getById(id);
         if (old == null) {
@@ -34,7 +33,6 @@ public class ReplenishmentOrderService {
         LOG.info("Оновлено замовлення поповнення");
     }
 
-    /** Зміна стану життєвого циклу з перевіркою допустимості переходу. */
     public void changeState(long id, OrderState next) throws SQLException {
         ReplenishmentOrder current = dao.getById(id);
         if (current == null) {
@@ -55,7 +53,6 @@ public class ReplenishmentOrderService {
         dao.delete(id);
         LOG.info("Видалено замовлення поповнення");
     }
-
     /** Єдине місце правил переходів: CREATED -> APPROVED -> ORDERED -> RECEIVED. */
     public static boolean isAllowedTransition(OrderState from, OrderState to) {
         return (from == OrderState.CREATED && to == OrderState.APPROVED)
